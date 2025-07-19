@@ -9,8 +9,8 @@ This project explores the use of neural networks to learn effective precondition
   - [Diagonal Preconditioner (Phase 1)](#diagonal-preconditioner-phase-1)
   - [Block Preconditioner (Phase 2)](#block-preconditioner-phase-2)
 - [Benchmarking](#benchmarking)
-- [Results](#results)
 - [How to Run](#how-to-run)
+- [Results](#results)
 
 ---
 
