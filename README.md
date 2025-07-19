@@ -11,7 +11,6 @@ This project explores the use of neural networks to learn effective precondition
 - [Benchmarking](#benchmarking)
 - [Results](#results)
 - [How to Run](#how-to-run)
-- [Future Work](#future-work)
 
 ---
 
