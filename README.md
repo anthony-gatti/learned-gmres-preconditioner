@@ -2,9 +2,32 @@
 
 This project explores the use of neural networks to learn effective preconditioners for accelerating GMRES convergence, specifically for non-normal sparse matrices. Traditional preconditioners like Jacobi and ILU(0) often struggle with non-normality, which is common in directional systems such as advection-diffusion problems. This work investigates whether learned diagonal and block preconditioners can offer a lightweight, adaptive alternative.
 
+## Executive Summary
+**Goal.** Learn lightweight preconditioners (diagonal, 4×4 block) that reduce GMRES iterations on non-normal sparse systems vs. Jacobi / block-Jacobi / ILU(0).
+
+**Outcome.** The learned preconditioners did **not** consistently outperform the classical baselines across matrix families; in several cases they regressed.
+
+**Value.** This repo documents the approach, evaluation protocol, and failure modes—useful for others exploring learned preconditioning.
+
+### Results at a Glance
+
+<p align="center">
+  <img src="diagonal_results.png" alt="GMRES residual vs iteration — learned diagonal vs baselines (Scale = 1)" width="720">
+</p>
+<p align="center"><sub><em>Diagonal: synthetic non-normal (Scale = 1). Learned ≈ Jacobi; ILU(0) strongest.</em></sub></p>
+
+<p align="center">
+  <img src="block_results.png" alt="GMRES residual vs iteration — learned block vs baselines (Scale = 0.05)" width="720">
+</p>
+<p align="center"><sub><em>Block 4×4: synthetic non-normal (Scale = 0.05). Current model underperforms.</em></sub></p>
+
+**Takeaways**
+- Learned **diagonal** ≈ Jacobi on some non-normal regimes, but no clear win.
+- Learned **block (4×4)** underperformed—training time/regularization likely the bottleneck.
+
 ## Table of Contents
 - [Overview](#overview)
-- [Project Structure](#project-structure)
+- [Project Files](#project-files)
 - [Implementations](#implementations)
   - [Diagonal Preconditioner (Phase 1)](#diagonal-preconditioner-phase-1)
   - [Block Preconditioner (Phase 2)](#block-preconditioner-phase-2)
@@ -70,10 +93,6 @@ Both models are trained to minimize the GMRES residual norm using a log-scaled r
 - Synthetic Poisson matrices are used with increasing non-normality (via added sparse upper-triangular noise).
 - GMRES solves until the residual norm drops below 1e-5 or max 300 iterations.
 
-Plots summarizing performance are located in:
-- `plot_diag.png` – Diagonal model results
-- `plot_block.png` – Block model results
-
 ---
 
 ## How to Run
@@ -102,3 +121,15 @@ python3 plot.py
 - **Block Model:**
 	- Underperformed due to training time constraints.
 	- Potential remains high with more compute and larger blocks.
+
+### Failure Analysis (What Didn’t Work)
+- **Objective mismatch.** Minimizing a proxy (e.g., \|I − MA\|_F or low-k unrolled GMRES) didn’t translate to fewer iterations at test time.
+- **Structure/stability.** Unconstrained blocks sometimes harmed GMRES stability; SPD/structure constraints helped but limited capacity.
+- **Generalization.** Models trained on one matrix family didn’t transfer to others (spectral properties shift).
+- **Overhead.** Compute/memory cost of constructing M reduced any small iteration gains.
+
+### Lessons & Next Steps
+- Strong baselines (ILU(0), block-Jacobi) are hard to beat across families.
+- Constrain learning (SPD, sparsity tied to A, row/col scalings) to preserve GMRES properties.
+- Explore objectives that target **eigenvalue clustering** / spectrum shaping.
+- More promising directions: learned **coarse components** (AMG-style), **meta-parameters** for classical preconditioners, or **per-family** models.
